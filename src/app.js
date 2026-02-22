@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/database');
 const userRoutes = require('./routes/userRoutes');
+const habitRoutes = require('./routes/habitRoutes');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/users', userRoutes);
+app.use('/api/habits', habitRoutes);
 
 app.get('/', (req, res) => {
   res.send('API de Control de Hábitos funcionando');

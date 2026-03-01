@@ -12,7 +12,7 @@ const connectDB = async () => {
       await mongoose.connect(mongoUri);
       console.log('✅ MongoDB en memoria conectado correctamente');
     } else {
-      // En producción, usar MONGO_URI de .env
+      // En producción, usar MONGO_URI de .env (Atlas)
       await mongoose.connect(process.env.MONGO_URI, {
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,

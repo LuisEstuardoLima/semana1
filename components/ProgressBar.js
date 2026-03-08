@@ -1,34 +1,29 @@
-export default function ProgressBar({ days = 33, total = 66 }) {
-  // Por ahora es estático, siempre muestra 33 días de 66 (50%)
-  const progress = 50; // Estático para la semana 3
+export default function ProgressBar() {
+  // Semana 3: Barra estática al 50%
+  const progress = 50;
   
+  // Determinar color basado en progreso
   const getProgressColor = () => {
-    if (progress < 33) return 'bg-progress-red';
-    if (progress < 66) return 'bg-progress-yellow';
-    return 'bg-progress-green';
+    if (progress < 33) return 'bg-red-500';
+    if (progress < 66) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
   return (
     <div className="w-full space-y-2">
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-gray-600 font-medium">Progreso: {days} días</span>
-        <span className="text-gray-400">Meta: {total} días</span>
+      <div className="flex justify-between text-sm text-gray-600">
+        <span>Progreso: Día 33 de 66</span>
+        <span>50%</span>
       </div>
-      
-      <div className="progress-bar">
+      <div className="w-full bg-gray-200 rounded-full h-4">
         <div 
-          className={`progress-fill ${getProgressColor()}`}
+          className={`h-4 rounded-full transition-all duration-500 ${getProgressColor()}`}
           style={{ width: `${progress}%` }}
-          role="progressbar"
-          aria-valuenow={progress}
-          aria-valuemin="0"
-          aria-valuemax="100"
-        />
+        ></div>
       </div>
-      
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-gray-400">
         <span>🔴 Inicio</span>
-        <span>🟡 Progreso</span>
+        <span>🟡 Tú estás aquí</span>
         <span>🟢 Meta (66 días)</span>
       </div>
     </div>

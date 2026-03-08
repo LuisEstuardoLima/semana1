@@ -1,38 +1,69 @@
-import { useDispatch } from 'react-redux'
-import { completeHabit } from '../redux/habitsSlice'
+import { useDispatch } from 'react-redux';
+import ProgressBar from './ProgressBar';
+import DoneButton from './DoneButton';
 
 export default function HabitCard({ habit }) {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   
-  const progress = Math.min((habit.currentStreak / 66) * 100, 100)
-  const progressColor = progress < 33 ? 'bg-red-500' : progress < 66 ? 'bg-yellow-500' : 'bg-green-500'
+  // Calcular color basado en la racha actual
+  const getStreakColor = () => {
+    if (habit.currentStreak < 22) return 'text-red-600';
+    if (habit.currentStreak < 44) return 'text-yellow-600';
+    return 'text-green-600';
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-semibold mb-2">{habit.name}</h3>
-      {habit.description && (
-        <p className="text-gray-600 mb-4">{habit.description}</p>
-      )}
-      
-      <div className="mb-4">
-        <div className="flex justify-between text-sm text-gray-600 mb-1">
-          <span>Racha: {habit.currentStreak} días</span>
-          <span>Meta: 66 días</span>
+    <div className="habit-card group">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+            {habit.name}
+          </h3>
+          {habit.description && (
+            <p className="text-gray-600 text-sm mt-1 line-clamp-2">
+              {habit.description}
+            </p>
+          )}
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className={`h-2.5 rounded-full ${progressColor}`}
-            style={{ width: `${progress}%` }}
-          />
+        
+        {/* Streak Badge */}
+        <div className={`flex items-center space-x-1 px-3 py-1 rounded-full font-semibold ${getStreakColor()} bg-opacity-10`}>
+          <span className="text-sm">🔥</span>
+          <span className="text-sm">{habit.currentStreak}</span>
         </div>
       </div>
 
-      <button
-        onClick={() => dispatch(completeHabit(habit._id))}
-        className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
-      >
-        Completar Hoy
-      </button>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="text-center p-2 bg-gray-50 rounded-lg">
+          <p className="text-xs text-gray-500">Racha Actual</p>
+          <p className={`text-xl font-bold ${getStreakColor()}`}>
+            {habit.currentStreak}
+          </p>
+        </div>
+        <div className="text-center p-2 bg-gray-50 rounded-lg">
+          <p className="text-xs text-gray-500">Mejor Racha</p>
+          <p className="text-xl font-bold text-blue-600">
+            {habit.bestStreak}
+          </p>
+        </div>
+      </div>
+
+      {/* Progress Bar (estática) */}
+      <div className="mb-4">
+        <ProgressBar days={habit.currentStreak} />
+      </div>
+
+      {/* Done Button (no funcional) */}
+      <div className="flex justify-end">
+        <DoneButton />
+      </div>
+
+      {/* Tooltip indicando que es estático */}
+      <div className="mt-2 text-xs text-center text-gray-400 italic">
+        * Barra de progreso estática (50%) - Botón Done en desarrollo
+      </div>
     </div>
-  )
+  );
 }

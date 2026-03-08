@@ -2,12 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 245, 245, 245;
+@layer components {
+  .habit-card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-gray-100;
+  }
+  
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-3 overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply h-3 rounded-full transition-all duration-700 ease-out;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium;
+  }
+  
+  .btn-success {
+    @apply bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 font-medium;
+  }
+  
+  .btn-danger {
+    @apply bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium;
+  }
 }
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .bg-opacity-10 {
+    --tw-bg-opacity: 0.1;
+  }
 }

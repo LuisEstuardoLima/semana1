@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const connectDB = require('./config/database');
 const habitRoutes = require('./routes/habits');
+const authRoutes = require('./routes/auth');
 
 // Conectar a MongoDB
 connectDB();
@@ -17,6 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Rutas
+app.use('/api/auth', authRoutes);
 app.use('/api/habits', habitRoutes);
 
 // Ruta de prueba

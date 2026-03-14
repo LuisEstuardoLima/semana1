@@ -1,9 +1,19 @@
 const Habit = require('../models/Habit');
 
-// Obtener todos los hábitos
+// @desc    Obtener todos los hábitos del usuario
+// @route   GET /api/habits
 exports.getAllHabits = async (req, res) => {
   try {
-    const habits = await Habit.find().sort({ createdAt: -1 });
+    const habits = await Habit.find({ user: req.user.id }).sort({ createdAt: -1 });
+    
+    // Verificar rachas para cada hábito
+    habits.forEach(habit => {
+      if (!habit.checkStreak()) {
+        // Si se perdió la racha, reiniciar currentStreak
+        habit.currentStreak = 0;
+      }
+    });
+    
     res.status(200).json({
       success: true,
       count: habits.length,
@@ -17,10 +27,14 @@ exports.getAllHabits = async (req, res) => {
   }
 };
 
-// Obtener un hábito por ID
+// @desc    Obtener un hábito por ID
+// @route   GET /api/habits/:id
 exports.getHabitById = async (req, res) => {
   try {
-    const habit = await Habit.findById(req.params.id);
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
     
     if (!habit) {
       return res.status(404).json({
@@ -41,10 +55,14 @@ exports.getHabitById = async (req, res) => {
   }
 };
 
-// Crear un nuevo hábito
+// @desc    Crear un nuevo hábito
+// @route   POST /api/habits
 exports.createHabit = async (req, res) => {
   try {
-    const habit = await Habit.create(req.body);
+    const habit = await Habit.create({
+      ...req.body,
+      user: req.user.id
+    });
     
     res.status(201).json({
       success: true,
@@ -58,11 +76,12 @@ exports.createHabit = async (req, res) => {
   }
 };
 
-// Actualizar un hábito
+// @desc    Actualizar un hábito
+// @route   PUT /api/habits/:id
 exports.updateHabit = async (req, res) => {
   try {
-    const habit = await Habit.findByIdAndUpdate(
-      req.params.id,
+    const habit = await Habit.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },
       req.body,
       {
         new: true,
@@ -89,10 +108,14 @@ exports.updateHabit = async (req, res) => {
   }
 };
 
-// Eliminar un hábito
+// @desc    Eliminar un hábito
+// @route   DELETE /api/habits/:id
 exports.deleteHabit = async (req, res) => {
   try {
-    const habit = await Habit.findByIdAndDelete(req.params.id);
+    const habit = await Habit.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id
+    });
     
     if (!habit) {
       return res.status(404).json({
@@ -113,10 +136,14 @@ exports.deleteHabit = async (req, res) => {
   }
 };
 
-// Marcar hábito como completado hoy
+// @desc    Marcar hábito como completado
+// @route   POST /api/habits/:id/complete
 exports.completeHabit = async (req, res) => {
   try {
-    const habit = await Habit.findById(req.params.id);
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
     
     if (!habit) {
       return res.status(404).json({
@@ -125,46 +152,15 @@ exports.completeHabit = async (req, res) => {
       });
     }
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Marcar como completado (maneja reinicio de racha automáticamente)
+    const completed = habit.complete();
     
-    // Verificar si ya fue completado hoy
-    const alreadyCompleted = habit.completedDates.some(date => {
-      const completedDate = new Date(date);
-      completedDate.setHours(0, 0, 0, 0);
-      return completedDate.getTime() === today.getTime();
-    });
-    
-    if (!alreadyCompleted) {
-      habit.completedDates.push(today);
-      
-      // Calcular racha actual
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      const completedYesterday = habit.completedDates.some(date => {
-        const completedDate = new Date(date);
-        completedDate.setHours(0, 0, 0, 0);
-        return completedDate.getTime() === yesterday.getTime();
-      });
-      
-      if (completedYesterday) {
-        habit.currentStreak += 1;
-      } else {
-        habit.currentStreak = 1;
-      }
-      
-      // Actualizar mejor racha
-      if (habit.currentStreak > habit.bestStreak) {
-        habit.bestStreak = habit.currentStreak;
-      }
-      
-      await habit.save();
-    }
+    await habit.save();
     
     res.status(200).json({
       success: true,
-      data: habit
+      data: habit,
+      message: completed ? 'Hábito completado' : 'Ya estaba completado hoy'
     });
   } catch (error) {
     res.status(500).json({
@@ -174,10 +170,14 @@ exports.completeHabit = async (req, res) => {
   }
 };
 
-// Obtener progreso de un hábito
+// @desc    Obtener progreso de un hábito
+// @route   GET /api/habits/:id/progress
 exports.getHabitProgress = async (req, res) => {
   try {
-    const habit = await Habit.findById(req.params.id);
+    const habit = await Habit.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
     
     if (!habit) {
       return res.status(404).json({
@@ -189,9 +189,10 @@ exports.getHabitProgress = async (req, res) => {
     const progress = {
       currentStreak: habit.currentStreak,
       bestStreak: habit.bestStreak,
-      progressPercentage: habit.getProgress(),
+      progressPercentage: Math.min((habit.currentStreak / 66) * 100, 100),
       completedToday: habit.wasCompletedToday(),
-      totalCompletions: habit.completedDates.length
+      totalCompletions: habit.completedDates.length,
+      lastCompletedDate: habit.lastCompletedDate
     };
     
     res.status(200).json({

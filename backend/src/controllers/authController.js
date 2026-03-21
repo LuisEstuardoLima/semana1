@@ -1,10 +1,17 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
 
 // Generar token JWT
 const generateToken = (user) => {
   return jwt.sign(
-    { user: { id: user.id, email: user.email } },
+    { 
+      user: { 
+        id: user.id, 
+        email: user.email,
+        name: user.name
+      } 
+    },
     process.env.JWT_SECRET || 'secretkey',
     { expiresIn: '7d' }
   );
@@ -14,6 +21,15 @@ const generateToken = (user) => {
 // @route   POST /api/auth/register
 exports.register = async (req, res) => {
   try {
+    // Validar errores
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
     const { name, email, password } = req.body;
 
     // Verificar si usuario ya existe
@@ -21,7 +37,7 @@ exports.register = async (req, res) => {
     if (user) {
       return res.status(400).json({
         success: false,
-        error: 'El usuario ya existe'
+        error: 'El email ya está registrado'
       });
     }
 
@@ -46,8 +62,9 @@ exports.register = async (req, res) => {
         email: user.email
       }
     });
+    
   } catch (error) {
-    console.error(error);
+    console.error('Error en registro:', error);
     res.status(500).json({
       success: false,
       error: 'Error en el servidor'
@@ -59,12 +76,21 @@ exports.register = async (req, res) => {
 // @route   POST /api/auth/login
 exports.login = async (req, res) => {
   try {
+    // Validar errores
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        errors: errors.array()
+      });
+    }
+
     const { email, password } = req.body;
 
     // Verificar si usuario existe
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         error: 'Credenciales inválidas'
       });
@@ -73,7 +99,7 @@ exports.login = async (req, res) => {
     // Verificar contraseña
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
         error: 'Credenciales inválidas'
       });
@@ -91,8 +117,9 @@ exports.login = async (req, res) => {
         email: user.email
       }
     });
+    
   } catch (error) {
-    console.error(error);
+    console.error('Error en login:', error);
     res.status(500).json({
       success: false,
       error: 'Error en el servidor'
@@ -104,13 +131,13 @@ exports.login = async (req, res) => {
 // @route   GET /api/auth/me
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('-password');
+    // req.user ya está disponible por el middleware
     res.json({
       success: true,
-      user
+      user: req.user
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error en getMe:', error);
     res.status(500).json({
       success: false,
       error: 'Error en el servidor'

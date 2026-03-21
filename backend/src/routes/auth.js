@@ -1,0 +1,35 @@
+const express = require('express');
+const router = express.Router();
+const { body } = require('express-validator');
+const authController = require('../controllers/authController');
+const { authMiddleware } = require('../middleware/auth');
+
+// Validaciones
+const registerValidation = [
+  body('name')
+    .notEmpty().withMessage('El nombre es requerido')
+    .trim()
+    .isLength({ min: 2, max: 50 }).withMessage('El nombre debe tener entre 2 y 50 caracteres'),
+  body('email')
+    .isEmail().withMessage('Email inválido')
+    .normalizeEmail(),
+  body('password')
+    .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres')
+];
+
+const loginValidation = [
+  body('email')
+    .isEmail().withMessage('Email inválido')
+    .normalizeEmail(),
+  body('password')
+    .notEmpty().withMessage('La contraseña es requerida')
+];
+
+// Rutas públicas
+router.post('/register', registerValidation, authController.register);
+router.post('/login', loginValidation, authController.login);
+
+// Rutas protegidas
+router.get('/me', authMiddleware, authController.getMe);
+
+module.exports = router;

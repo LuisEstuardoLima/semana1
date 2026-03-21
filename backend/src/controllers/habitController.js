@@ -9,7 +9,6 @@ exports.getAllHabits = async (req, res) => {
     // Verificar rachas para cada hábito
     habits.forEach(habit => {
       if (!habit.checkStreak()) {
-        // Si se perdió la racha, reiniciar currentStreak
         habit.currentStreak = 0;
       }
     });
@@ -26,6 +25,7 @@ exports.getAllHabits = async (req, res) => {
     });
   }
 };
+
 
 // @desc    Obtener un hábito por ID
 // @route   GET /api/habits/:id

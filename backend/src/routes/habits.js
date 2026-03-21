@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const habitController = require('../controllers/habitController');
-const authMiddleware = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 
+// IMPORTANTE: authMiddleware debe ser una función, no un objeto
 // Todas las rutas de hábitos requieren autenticación
 router.use(authMiddleware);
 

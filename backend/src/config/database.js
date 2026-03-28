@@ -1,27 +1,19 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
-
-let mongoServer;
+require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    // En desarrollo, usar MongoDB en memoria
-    if (process.env.NODE_ENV !== 'production') {
-      mongoServer = await MongoMemoryServer.create();
-      const mongoUri = mongoServer.getUri();
-      await mongoose.connect(mongoUri);
-      console.log('✅ MongoDB en memoria conectado correctamente');
-    } else {
-      // En producción, usar MONGO_URI de .env (Atlas)
-      await mongoose.connect(process.env.MONGO_URI, {
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-      });
-      console.log('✅ MongoDB Atlas conectado correctamente');
-    }
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ Conexión exitosa a MongoDB Atlas');
   } catch (error) {
-    console.error('❌ Error al conectar MongoDB:', error.message);
-    process.exit(1);
+    console.error('❌ Error conectando a MongoDB:', error.message);
+    // No salir del proceso en producción
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 

@@ -5,27 +5,34 @@ const connectDB = async () => {
   try {
     // Verificar que MONGODB_URI existe
     if (!process.env.MONGODB_URI) {
-      console.error('❌ Error: MONGODB_URI no está definida en variables de entorno');
-      console.log('Por favor, configura MONGODB_URI en tu archivo .env');
-      process.exit(1);
+      throw new Error('MONGODB_URI no está definida en variables de entorno');
     }
 
     console.log('🔗 Conectando a MongoDB Atlas...');
-    console.log('URL:', process.env.MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')); // Oculta credenciales
     
-    await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+    // Opciones de conexión para evitar problemas
+    const options = {
+      serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
+      family: 4, // Forzar IPv4
+      retryWrites: true,
+      w: 'majority'
+    };
+    
+    await mongoose.connect(process.env.MONGODB_URI, options);
+    console.log('✅ Conectado a MongoDB Atlas correctamente');
+    
+    // Manejar eventos de conexión
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ Error en conexión MongoDB:', err);
     });
     
-    console.log('✅ Conectado a MongoDB Atlas correctamente');
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB desconectado, intentando reconectar...');
+    });
     
   } catch (error) {
     console.error('❌ Error conectando a MongoDB:', error.message);
-    console.error('Verifica que:');
-    console.error('1. La URL de MongoDB es correcta');
-    console.error('2. El usuario y contraseña son correctos');
-    console.error('3. Tu IP está permitida en MongoDB Atlas (Network Access)');
     process.exit(1);
   }
 };

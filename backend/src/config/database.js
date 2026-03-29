@@ -1,26 +1,41 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
-
-let mongoServer;
+require('dotenv').config();
 
 const connectDB = async () => {
   try {
-    // En desarrollo, usar MongoDB en memoria
-    if (process.env.NODE_ENV !== 'production') {
-      mongoServer = await MongoMemoryServer.create();
-      const mongoUri = mongoServer.getUri();
-      await mongoose.connect(mongoUri);
-      console.log('✅ MongoDB en memoria conectado correctamente');
-    } else {
-      // En producción, usar MONGO_URI de .env (Atlas)
-      await mongoose.connect(process.env.MONGO_URI, {
-        serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-      });
-      console.log('✅ MongoDB Atlas conectado correctamente');
+    // En producción, MONGODB_URI es obligatoria
+    if (!process.env.MONGODB_URI) {
+      console.error('❌ Error: MONGODB_URI no está definida en variables de entorno');
+      console.error('Por favor, configura MONGODB_URI en Render');
+      process.exit(1);
     }
+
+    console.log('🔗 Conectando a MongoDB Atlas...');
+    console.log('URL:', process.env.MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@'));
+    
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      family: 4,
+    });
+    
+    console.log('✅ Conectado a MongoDB Atlas correctamente');
+    
+    // Manejar eventos de conexión
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ Error en conexión MongoDB:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB desconectado');
+    });
+    
   } catch (error) {
-    console.error('❌ Error al conectar MongoDB:', error.message);
+    console.error('❌ Error conectando a MongoDB:', error.message);
+    console.error('Verifica que:');
+    console.error('1. La URL de MongoDB es correcta');
+    console.error('2. El usuario y contraseña son correctos');
+    console.error('3. Tu IP está permitida en MongoDB Atlas');
     process.exit(1);
   }
 };

@@ -1,18 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
+  output: 'export',
   images: {
-    domains: ['localhost', 'onrender.com'],
+    unoptimized: true,
   },
-  // Ignorar errores de ESLint en producción
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // Ignorar errores de TypeScript en producción
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-};
+  trailingSlash: true,
+}
 
-export default nextConfig;
+module.exports = nextConfig

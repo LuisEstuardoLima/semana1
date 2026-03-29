@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
+const mongoose = require('mongoose');
 
 const connectDB = require('./config/database');
 const habitRoutes = require('./routes/habits');
@@ -13,7 +14,10 @@ connectDB();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -25,7 +29,17 @@ app.use('/api/habits', habitRoutes);
 app.get('/', (req, res) => {
   res.json({
     message: 'API de Seguimiento de Hábitos funcionando',
-    version: '1.0.0'
+    version: '1.0.0',
+    status: 'online'
+  });
+});
+
+// Ruta de health check (agregar esta)
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
@@ -42,3 +56,5 @@ const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
+
+module.exports = app;
